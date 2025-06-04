@@ -16,7 +16,6 @@ Plataforma em PHP para gestão de podcasts e conteúdos para Terapia Ocupacional
 cd payments
 composer install
 ```
-
 4. Execute as migrações SQL em `db/migrations` para criar tabelas adicionais, incluindo as da comunidade e dos novos recursos de curtidas e votos:
 
 ```bash
