@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xperio - Orçamento Loja Virtual Profissional</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --secondary: #00F5A0;
+            --accent: #00D9F5;
+            --dark: #0F1121;
+            --darker: #090B17;
+            --light: #F5F5F7;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--darker);
+            color: var(--light);
+            overflow-x: hidden;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .accent-gradient-text {
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .bg-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+                
+        .card {
+            background-color: rgba(15, 17, 33, 0.7);
+            border: 1px solid rgba(108, 99, 255, 0.1);
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .card:hover {
+            border-color: rgba(108, 99, 255, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+        }
+                
+        .btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover:after {
+            transform: translateX(0);
+        }
+        
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link:after {
+            content: "";
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover:after {
+            width: 100%;
+        }
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); } /* Reduced floating intensity */
+            100% { transform: translateY(0px); }
+        }
+
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+        
+        .whatsapp-button {
+            background: #25D366;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
+        }
+        
+        .whatsapp-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(37, 211, 102, 0.6);
+        }
+        
+        .whatsapp-float {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--darker);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+
+        .menu-toggle-icon .fa-bars { display: block; }
+        .menu-toggle-icon .fa-times { display: none; }
+        .menu-open .menu-toggle-icon .fa-bars { display: none; }
+        .menu-open .menu-toggle-icon .fa-times { display: block; }
+
+        .feature-item {
+            background-color: rgba(15, 17, 33, 0.5); /* var(--dark) with opacity */
+            border-left: 3px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header class="fixed top-0 left-0 w-full py-4 z-50 bg-opacity-80 bg-black backdrop-filter backdrop-blur-md">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center">
+                <span class="text-2xl font-bold gradient-text">Xperio</span>
+            </div>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="#itens-inclusos" class="nav-link text-gray-200 hover:text-white">Itens Inclusos</a>
+                <a href="#investimento" class="nav-link text-gray-200 hover:text-white">Investimento</a>
+                <a href="#condicoes" class="nav-link text-gray-200 hover:text-white">Condições</a>
+                <a href="#contato-proposta" class="nav-link text-gray-200 hover:text-white">Contato</a>
+            </nav>
+            <a href="https://wa.me/5511987654321?text=Olá!%20Gostaria%20de%20discutir%20a%20proposta%20para%20criação%20de%20Loja%20Virtual." class="hidden md:block whatsapp-button text-white px-6 py-2 rounded-full btn font-medium">
+                <i class="fab fa-whatsapp mr-2"></i> Discutir Proposta
+            </a>
+            <button id="menu-toggle" class="md:hidden text-white focus:outline-none menu-toggle-icon">
+                <i class="fas fa-bars text-2xl"></i>
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <div id="mobile-menu" class="fixed top-0 right-0 bottom-0 w-4/5 max-w-xs bg-darker z-50 shadow-2xl mobile-menu p-6">
+        <div class="flex justify-end mb-8">
+            <button id="close-menu" class="text-white focus:outline-none">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <nav class="flex flex-col space-y-6">
+            <a href="#itens-inclusos" class="text-xl text-white font-medium mobile-link">Itens Inclusos</a>
+            <a href="#investimento" class="text-xl text-white font-medium mobile-link">Investimento</a>
+            <a href="#condicoes" class="text-xl text-white font-medium mobile-link">Condições</a>
+            <a href="#contato-proposta" class="text-xl text-white font-medium mobile-link">Contato</a>
+        </nav>
+        <div class="mt-12">
+            <a href="https://wa.me/5511987654321?text=Olá!%20Gostaria%20de%20discutir%20a%20proposta%20para%20criação%20de%20Loja%20Virtual." class="block whatsapp-button text-white px-6 py-3 rounded-full btn font-medium text-center">
+                <i class="fab fa-whatsapp mr-2"></i> Discutir Proposta
+            </a>
+        </div>
+    </div>
+    <div id="menu-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+    <section class="min-h-screen flex items-center pt-24 pb-12 md:pt-32">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="md:w-3/5 mb-12 md:mb-0 text-center md:text-left">
+                    <h4 class="text-xl md:text-2xl mb-3 text-gray-400 reveal">Proposta Comercial</h4>
+                    <h1 class="text-4xl md:text-6xl font-black mb-4 leading-tight reveal">
+                        Criação de <span class="gradient-text">Loja Virtual</span>
+                    </h1>
+                    <h2 class="text-2xl md:text-3xl font-semibold mb-6 text-gray-200 reveal">
+                        Pacote <span class="accent-gradient-text">Xperio Digital Profissional</span>
+                    </h2>
+                    <p class="text-lg md:text-xl text-gray-300 mb-10 reveal max-w-2xl mx-auto md:mx-0">Prezado(a) cliente, agradecemos o seu interesse em nossos serviços. Segue a proposta detalhada para o desenvolvimento da sua loja virtual, com o que há de mais atual em identidade visual, experiência de compra e personalização digital.</p>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6 justify-center md:justify-start reveal">
+                        <a href="#itens-inclusos" class="bg-gradient text-white px-8 py-4 rounded-full btn text-center font-medium text-lg">Ver Detalhes do Pacote</a>
+                        <a href="https://wa.me/5511987654321?text=Olá!%20Tenho%20dúvidas%20sobre%20a%20proposta%20da%20Loja%20Virtual%20Xperio." class="border border-gray-600 text-white px-8 py-4 rounded-full btn text-center font-medium hover:border-primary text-lg">Tirar Dúvidas</a>
+                    </div>
+                </div>
+                <div class="md:w-2/5 flex justify-center">
+                    <div class="relative floating">
+                         <div class="w-64 h-64 md:w-80 md:h-80 bg-dark rounded-3xl border border-gray-800 overflow-hidden shadow-2xl flex items-center justify-center">
+                            <i class="fas fa-file-invoice-dollar text-8xl text-primary opacity-50"></i>
+                        </div>
+                         <div class="w-48 h-48 md:w-64 md:h-64 rounded-full bg-primary bg-opacity-10 absolute -top-10 -left-10 blur-2xl -z-10"></div>
+                        <div class="w-48 h-48 md:w-64 md:h-64 rounded-full bg-secondary bg-opacity-10 absolute -bottom-10 -right-10 blur-2xl -z-10"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="itens-inclusos" class="py-20 bg-dark">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-bold mb-6 reveal">Itens Inclusos no <span class="gradient-text">Pacote Profissional</span></h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto reveal">Todos os elementos essenciais para uma loja virtual de alto impacto e performance.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="feature-item p-6 rounded-lg reveal">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-palette fa-2x text-primary mr-4"></i>
+                        <h3 class="text-xl font-bold">Logo e Identidade Visual</h3>
+                    </div>
+                    <p class="text-gray-400">Logo (animado ou estático, com variantes e favicon) e identidade visual completa.</p>
+                </div>
+                 <div class="feature-item p-6 rounded-lg reveal">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-object-group fa-2x text-primary mr-4"></i>
+                        <h3 class="text-xl font-bold">Banners e Capas</h3>
+                    </div>
+                    <p class="text-gray-400">2 banners (animados ou estáticos, 1 informativo) e capas para coleções.</p>
+                </div>
+                <div class="feature-item p-6 rounded-lg reveal">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-truck fa-2x text-primary mr-4"></i>
+                        <h3 class="text-xl font-bold">Página de Rastreio</h3>
+                    </div>
+                    <p class="text-gray-400">Design clean + página de agradecimento personalizada.</p>
+                </div>
+                <div class="feature-item p-6 rounded-lg reveal">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-file-contract fa-2x text-primary mr-4"></i>
+                        <h3 class="text-xl font-bold">Páginas Legais</h3>
+                    </div>
+                    <p class="text-gray-400">Páginas de políticas completas e página de perguntas frequentes (FAQ).</p>
+                </div>
+                 <div class="feature-item p-6 rounded-lg reveal">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-shield-alt fa-2x text-primary mr-4"></i>
+                        <h3 class="text-xl font-bold">Blindagem Criativa</h3>
+                    </div>
+                    <p class="text-gray-400">Sistema de blindagem de identidade visual e criativa.</p>
+                </div>
+                <div class="feature-item p-6 rounded-lg reveal">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-credit-card fa-2x text-primary mr-4"></i>
+                        <h3 class="text-xl font-bold">Tabela de Parcelamento</h3>
+                    </div>
+                    <p class="text-gray-400">Tabela de parcelamento personalizada na página do produto.</p>
+                </div>
+                <div class="feature-item p-6 rounded-lg reveal">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-store fa-2x text-primary mr-4"></i>
+                        <h3 class="text-xl font-bold">Tema Premium e Configuração</h3>
+                    </div>
+                    <p class="text-gray-400">Estrutura clean, super responsiva, lazyload, descrição otimizada e configuração completa.</p>
+                </div>
+                <div class="feature-item p-6 rounded-lg reveal">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-globe fa-2x text-primary mr-4"></i>
+                        <h3 class="text-xl font-bold">Domínio e Checkout</h3>
+                    </div>
+                    <p class="text-gray-400">Configuração de domínio, checkout e código CSS personalizado.</p>
+                </div>
+                <div class="feature-item p-6 rounded-lg reveal">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-headset fa-2x text-primary mr-4"></i>
+                        <h3 class="text-xl font-bold">Suporte e Orientação</h3>
+                    </div>
+                    <p class="text-gray-400">Suporte para funções desenvolvidas, personalização do tema e orientação pós-entrega.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="investimento" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="card rounded-2xl p-8 md:p-12 text-center reveal max-w-3xl mx-auto">
+                <h4 class="text-xl text-gray-400 mb-3">Seu Investimento Estratégico</h4>
+                <h2 class="text-4xl md:text-6xl font-bold mb-6 accent-gradient-text">R$ 1.747,00</h2>
+                <p class="text-xl text-gray-300 mb-2">(Valor Único)</p>
+                <p class="text-gray-400 max-w-xl mx-auto">Este investimento inclui todas as etapas e itens listados para a criação completa da sua Loja Virtual Profissional Xperio.</p>
+                <a href="https://wa.me/5511987654321?text=Olá!%20Gostaria%20de%20contratar%20o%20Pacote%20Xperio%20Digital%20Profissional." class="mt-8 inline-block bg-gradient text-white px-10 py-4 rounded-full btn font-medium text-lg">Contratar Pacote Agora</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="condicoes" class="py-20 bg-dark">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                <div class="card rounded-2xl p-8 reveal">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-pencil-ruler fa-3x text-secondary mr-4"></i>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-1">Personalização <span class="accent-gradient-text">Exclusiva</span></h3>
+                            <p class="text-gray-400">Sua marca em cada detalhe.</p>
+                        </div>
+                    </div>
+                    <p class="text-lg text-gray-300">A sua loja virtual é 100% personalizada conforme seu nicho de mercado, suas preferências estéticas e a identidade visual da sua marca. Nosso compromisso é garantir não apenas exclusividade, mas também um alto padrão de design e usabilidade que cative seus clientes e impulsione suas vendas.</p>
+                </div>
+
+                <div class="card rounded-2xl p-8 reveal">
+                     <div class="flex items-center mb-4">
+                        <i class="fas fa-tasks fa-3x text-secondary mr-4"></i>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-1">Condições <span class="accent-gradient-text">Comerciais</span></h3>
+                             <p class="text-gray-400">Transparência e flexibilidade.</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-4 text-lg text-gray-300">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-secondary mt-1 mr-3"></i>
+                            <div><strong>Prazo de Entrega:</strong> 7 a 12 dias úteis após o envio do briefing completo e materiais necessários.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-secondary mt-1 mr-3"></i>
+                            <div><strong>Pagamento:</strong> 50% na contratação (sinal) e 50% na entrega final da loja. (Condições flexíveis podem ser discutidas).</div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-secondary mt-1 mr-3"></i>
+                            <div><strong>Suporte Pós-Entrega:</strong> Inclui ajustes finos, suporte em configurações e dúvidas relacionadas ao tema por até 7 dias após a entrega.</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contato-proposta" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="rounded-3xl bg-dark p-10 md:p-16 relative overflow-hidden text-center">
+                <div class="w-64 h-64 md:w-96 md:h-96 rounded-full bg-primary bg-opacity-10 absolute -top-20 -left-20 blur-3xl -z-10"></div>
+                <div class="w-64 h-64 md:w-96 md:h-96 rounded-full bg-secondary bg-opacity-10 absolute -bottom-20 -right-20 blur-3xl -z-10"></div>
+                
+                <div class="relative z-10">
+                    <h4 class="text-xl text-gray-400 mb-3 reveal">Próximos Passos</h4>
+                    <h2 class="text-3xl md:text-5xl font-bold mb-6 leading-tight reveal">
+                        Vamos <span class="gradient-text">Iniciar Seu Projeto</span> de Sucesso?
+                    </h2>
+                    <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto reveal">Para darmos início à criação da sua loja virtual e transformarmos sua visão em realidade, solicitamos o envio do briefing (questionário detalhado) que forneceremos após a confirmação do interesse nesta proposta.</p>
+                    
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 reveal">
+                        <a href="https://wa.me/5511987654321?text=Olá!%20Gostaria%20de%20receber%20o%20briefing%20para%20o%20Pacote%20Xperio%20Digital%20Profissional." class="whatsapp-button text-white px-8 py-4 rounded-full btn font-medium flex items-center justify-center text-lg">
+                            <i class="fab fa-whatsapp text-2xl mr-3"></i>
+                            Solicitar Briefing
+                        </a>
+                        <a href="mailto:contato@xperio.com.br?subject=Interesse%20na%20Proposta%20Loja%20Virtual%20Xperio" class="bg-dark border border-gray-600 text-white px-8 py-4 rounded-full btn font-medium flex items-center justify-center text-lg hover:border-primary">
+                            <i class="fas fa-envelope text-2xl mr-3"></i>
+                            Enviar E-mail
+                        </a>
+                    </div>
+                    <p class="mt-10 text-gray-400 reveal">Ficamos à disposição para esclarecer quaisquer dúvidas!</p>
+                    <p class="mt-2 text-xl font-semibold gradient-text reveal">XPERIO Design & Digital Solutions</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <a href="https://wa.me/5511987654321?text=Olá!%20Tenho%20dúvidas%20sobre%20a%20proposta%20da%20Xperio." class="whatsapp-float whatsapp-button flex items-center justify-center w-16 h-16 rounded-full shadow-lg">
+        <i class="fab fa-whatsapp text-3xl"></i>
+    </a>
+
+    <footer class="py-12 bg-darker border-t border-gray-800">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                <div class="flex items-center mb-6 md:mb-0">
+                    <span class="text-3xl font-bold gradient-text">Xperio</span>
+                </div>
+                <nav class="flex flex-wrap justify-center gap-4 md:gap-6">
+                    <a href="#itens-inclusos" class="nav-link text-gray-400 hover:text-white">Pacote</a>
+                    <a href="#investimento" class="nav-link text-gray-400 hover:text-white">Valor</a>
+                    <a href="#condicoes" class="nav-link text-gray-400 hover:text-white">Condições</a>
+                    <a href="mailto:contato@xperio.com.br" class="nav-link text-gray-400 hover:text-white">contato@xperio.com.br</a>
+                </nav>
+            </div>
+            <div class="pt-8 flex flex-col md:flex-row justify-between items-center border-t border-gray-700">
+                <p class="text-gray-500 text-sm mb-4 md:mb-0">© 2025 Xperio Design & Digital Solutions. Todos os direitos reservados.</p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-500 hover:text-white transition-colors text-sm">Política de Privacidade</a>
+                    <a href="#" class="text-gray-500 hover:text-white transition-colors text-sm">Termos de Uso</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Reveal animations on scroll
+        function revealElements() {
+            const reveals = document.querySelectorAll('.reveal');
+            for (let i = 0; i < reveals.length; i++) {
+                const windowHeight = window.innerHeight;
+                const elementTop = reveals[i].getBoundingClientRect().top;
+                const elementVisible = 100; // Adjust this value to change when the animation triggers
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add('active');
+                }
+            }
+        }
+        window.addEventListener('scroll', revealElements);
+        window.addEventListener('load', revealElements); // Also trigger on load for elements already in view
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    // Consider header height for accurate scroll position
+                    const headerOffset = document.querySelector('header').offsetHeight || 70;
+                    const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+                    const offsetPosition = elementPosition - headerOffset;
+        
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const closeMenuButton = document.getElementById('close-menu');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+        const body = document.body;
+        
+        function openMenu() {
+            mobileMenu.classList.add('active');
+            menuOverlay.classList.remove('hidden');
+            body.style.overflow = 'hidden'; // Prevent scrolling of body when menu is open
+            body.classList.add('menu-open'); // For icon toggle
+        }
+        
+        function closeMenu() {
+            mobileMenu.classList.remove('active');
+            menuOverlay.classList.add('hidden');
+            body.style.overflow = '';
+            body.classList.remove('menu-open');
+        }
+        
+        menuToggle.addEventListener('click', openMenu);
+        closeMenuButton.addEventListener('click', closeMenu);
+        menuOverlay.addEventListener('click', closeMenu); // Close menu if overlay is clicked
+        
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', closeMenu); // Close menu when a link is clicked
+        });
+    </script>
+</body>
+</html>
