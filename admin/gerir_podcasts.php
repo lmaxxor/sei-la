@@ -7,6 +7,8 @@ requireAdmin('../login.php'); // Garante que apenas administradores acessem
 
 // Conexão com Banco de Dados
 require_once __DIR__ . '/../db/db_connect.php'; // $pdo deve estar disponível aqui
+require_once __DIR__ . '/../sessao/csrf.php';
+$csrfToken = getCsrfToken();
 
 // --- FUNÇÕES UTILITÁRIAS ---
 
@@ -101,7 +103,9 @@ function validarTipoMIME(string $caminhoTemporario, array $tiposPermitidos): boo
 
 // --- PROCESSAMENTO DE AÇÕES AJAX ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    // TODO: Implementar verificação de Token CSRF
+    if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+        enviarRespostaJSON(false, 'Erro de segurança.');
+    }
 
     $action = $_POST['action'];
     $projectRoot = dirname(__DIR__);
@@ -308,6 +312,7 @@ $assuntos_filtro_todos_json = json_encode($assuntos_filtro_todos_php);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo $csrfToken; ?>">
     <title><?php echo sanitizarParaHTML($pageTitle); ?> - Admin Audio TO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -461,6 +466,7 @@ $assuntos_filtro_todos_json = json_encode($assuntos_filtro_todos_php);
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <form id="formEditarPodcast" novalidate>
+                <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                 <input type="hidden" name="id_podcast" id="edit_id_podcast">
                 <input type="hidden" name="action" value="edit_podcast_submit">
                 <input type="hidden" name="url_audio_atual" id="edit_url_audio_atual">
@@ -587,6 +593,7 @@ $assuntos_filtro_todos_json = json_encode($assuntos_filtro_todos_php);
         const filtroAssuntoSelect = document.getElementById('filtro_assunto');
         const filtroTituloInput = document.getElementById('filtro_titulo');
         const btnLimparFiltros = document.getElementById('btnLimparFiltros');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         const podcastListTableBody = document.getElementById('podcastListTableBody');
         const loadingPodcastsRow = document.getElementById('loadingPodcasts');
         const noPodcastsMessageDiv = document.getElementById('noPodcastsMessage');
@@ -750,6 +757,7 @@ $assuntos_filtro_todos_json = json_encode($assuntos_filtro_todos_php);
             formData.append('filtro_categoria', filtroCategoriaSelect.value);
             formData.append('filtro_assunto', filtroAssuntoSelect.value);
             formData.append('busca_titulo', filtroTituloInput.value);
+            if (csrfToken) formData.append('csrf_token', csrfToken);
 
             fetch(window.location.pathname, { method: 'POST', body: formData })
             .then(response => { if (!response.ok) throw new Error(`HTTP error ${response.status}`); return response.json(); })
@@ -799,7 +807,10 @@ $assuntos_filtro_todos_json = json_encode($assuntos_filtro_todos_php);
         function handleDeleteClick() {
             const podcastId = this.dataset.id; const podcastTitulo = this.dataset.titulo;
             if (confirm(`Tem certeza que deseja apagar "${podcastTitulo}"? Arquivos associados serão removidos.`)) {
-                const formData = new FormData(); formData.append('action', 'delete_podcast'); formData.append('id_podcast', podcastId);
+                const formData = new FormData();
+                formData.append('action', 'delete_podcast');
+                formData.append('id_podcast', podcastId);
+                if (csrfToken) formData.append('csrf_token', csrfToken);
                 fetch(window.location.pathname, { method: 'POST', body: formData })
                 .then(r => r.json()).then(d => { exibirFeedback(feedbackMessageDiv, d.msg, d.ok); if (d.ok) fetchPodcasts(); })
                 .catch(e => { console.error("Delete error:", e); exibirFeedback(feedbackMessageDiv, "Erro ao apagar.", false); });
@@ -807,7 +818,10 @@ $assuntos_filtro_todos_json = json_encode($assuntos_filtro_todos_php);
         }
 
         function abrirModalParaEditarPodcast(idPodcast) {
-            const formData = new FormData(); formData.append('action', 'get_podcast_details'); formData.append('id_podcast', idPodcast);
+            const formData = new FormData();
+            formData.append('action', 'get_podcast_details');
+            formData.append('id_podcast', idPodcast);
+            if (csrfToken) formData.append('csrf_token', csrfToken);
             editModalTitle.textContent = 'Carregando...'; formEditarPodcast.reset(); formEditarPodcast.classList.remove('was-validated'); limparFeedback(editModalFeedback);
             fetch(window.location.pathname, { method: 'POST', body: formData })
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
@@ -850,6 +864,7 @@ $assuntos_filtro_todos_json = json_encode($assuntos_filtro_todos_php);
             if (!this.checkValidity()) { e.stopPropagation(); this.classList.add('was-validated'); exibirFeedback(editModalFeedback, "Preencha os campos obrigatórios.", false); return; }
             this.classList.remove('was-validated'); setButtonLoadingState(btnSubmitEditPodcast, true); limparFeedback(editModalFeedback);
             const formData = new FormData(this);
+            if (csrfToken && !formData.has('csrf_token')) formData.append('csrf_token', csrfToken);
             fetch(window.location.pathname, { method: 'POST', body: formData })
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then(data => {

@@ -26,6 +26,7 @@ $avatarUrl = get_user_avatar_placeholder($userName, $userAvatarUrlSession, 40);
 // Parâmetros GET para navegação
 $slug_categoria_selecionada = trim(filter_input(INPUT_GET, 'categoria', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
 $slug_assunto_selecionado = trim(filter_input(INPUT_GET, 'assunto', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+$searchQuery = trim(filter_input(INPUT_GET, 'q', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
 
 // Variáveis de controle da página
 $pageTitle = "Nossos Podcasts";
@@ -36,6 +37,7 @@ $podcasts_do_assunto = [];
 $categoria_atual = null;
 $assunto_atual = null;
 $erro_pagina = null;
+$podcasts_search = [];
 
 /**
  * Determina o acesso do usuário a um podcast específico.
@@ -84,7 +86,19 @@ function determinarAcessoPodcast(array $podcast, int $currentUserPlanoId, bool $
 
 // BUSCA DE DADOS DO BANCO
 try {
-    if (!empty($slug_categoria_selecionada)) {
+    if ($searchQuery !== '') {
+        $pageTitle = 'Busca - AudioTO';
+        $breadcrumbs[] = ['nome' => 'Busca', 'link' => 'podcasts.php?q=' . urlencode($searchQuery)];
+        $stmt_busca = $pdo->prepare(
+            "SELECT id_podcast, titulo_podcast, descricao_podcast, link_material_apoio, slug_podcast, url_audio, visibilidade, id_plano_minimo, data_publicacao
+             FROM podcasts
+             WHERE titulo_podcast LIKE :q OR descricao_podcast LIKE :q
+             ORDER BY data_publicacao DESC"
+        );
+        $stmt_busca->bindValue(':q', '%' . $searchQuery . '%', PDO::PARAM_STR);
+        $stmt_busca->execute();
+        $podcasts_search = $stmt_busca->fetchAll(PDO::FETCH_ASSOC);
+    } elseif (!empty($slug_categoria_selecionada)) {
         $stmt_cat_atual = $pdo->prepare("SELECT id_categoria, nome_categoria, slug_categoria, icone_categoria, cor_icone, descricao_categoria FROM categorias_podcast WHERE slug_categoria = :slug");
         $stmt_cat_atual->execute([':slug' => $slug_categoria_selecionada]);
         $categoria_atual = $stmt_cat_atual->fetch(PDO::FETCH_ASSOC);
@@ -258,10 +272,10 @@ unset($_SESSION['feedback_message'], $_SESSION['feedback_type']);
                 <button id="mobileMenuButton" class="lg:hidden text-gray-600 hover:text-primary-blue mr-3 p-2" onclick="toggleMobileSidebar()">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <div class="relative w-full max-w-xs hidden sm:block">
-                    <input type="text" placeholder="Buscar Podcasts..." class="w-full py-2 px-4 pr-10 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-blue text-sm border border-transparent focus:border-primary-blue-light">
+                <form method="get" action="podcasts.php" class="relative w-full max-w-xs hidden sm:block">
+                    <input name="q" type="text" value="<?php echo htmlspecialchars($searchQuery); ?>" placeholder="Buscar Podcasts..." class="w-full py-2 px-4 pr-10 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-blue text-sm border border-transparent focus:border-primary-blue-light">
                     <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                </div>
+                </form>
             </div>
             <div class="flex items-center space-x-4">
                 <button class="text-gray-500 hover:text-primary-blue relative p-2">
@@ -313,8 +327,57 @@ unset($_SESSION['feedback_message'], $_SESSION['feedback_type']);
             <?php endif; ?>
 
             <?php if (!$erro_pagina): ?>
-                <?php // SEÇÃO: Exibir todas as categorias (página inicial de podcasts) ?>
-                <?php if (empty($slug_categoria_selecionada) && empty($slug_assunto_selecionado)): ?>
+                <?php if ($searchQuery !== ''): ?>
+                    <section class="content-item-animated" style="animation-name: fadeInUp;">
+                        <h1 class="text-2xl sm:text-3xl font-bold mb-6 p-6 rounded-xl shadow-lg bg-gradient-to-r from-primary-blue to-blue-400 text-white">Resultados para "<?php echo htmlspecialchars($searchQuery); ?>"</h1>
+                        <?php if (!empty($podcasts_search)): ?>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                                <?php foreach ($podcasts_search as $index => $pod):
+                                    $acesso = determinarAcessoPodcast($pod, $userPlanoId, $userIsAdmin);
+                                    $podeOuvir = $acesso['canPlay'];
+                                    $mostrarCadeado = $acesso['showPadlock'];
+                                    $isRestritoVisibilidade = $pod['visibilidade'] === 'restrito_assinantes';
+                                    $imagePath = 'https://placehold.co/300x300/2760f3/FFFFFF?text=' . urlencode(substr($pod['titulo_podcast'],0,1));
+                                    $descricao_curta_podcast = mb_strimwidth($pod['descricao_podcast'] ?? 'Ouça este episódio incrível.', 0, 100, "...");
+                                ?>
+                                <div class="bg-card-bg rounded-lg shadow-lg hover:shadow-xl transition-shadow flex flex-col content-item-animated overflow-hidden" style="animation-name: fadeInUp; animation-delay: <?php echo $index * 0.05; ?>s;">
+                                    <a href="player_podcast.php?slug=<?php echo htmlspecialchars($pod['slug_podcast']); ?>" class="block group">
+                                        <div class="relative">
+                                            <img src="<?php echo htmlspecialchars($imagePath); ?>" alt="Capa de <?php echo htmlspecialchars($pod['titulo_podcast']); ?>" class="w-full h-40 podcast-cover-image group-hover:scale-105 transition-transform duration-300">
+                                            <?php if ($isRestritoVisibilidade): ?>
+                                            <span class="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full shadow">
+                                                <i class="fas fa-crown mr-1 text-xs"></i>Premium
+                                            </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="p-4 flex flex-col flex-grow">
+                                            <h3 class="text-sm font-semibold text-dark-text mb-1 line-clamp-2 group-hover:text-primary-blue transition-colors"><?php echo htmlspecialchars($pod['titulo_podcast']); ?></h3>
+                                            <p class="text-xs text-medium-text line-clamp-2 mb-2 flex-grow"><?php echo htmlspecialchars($descricao_curta_podcast); ?></p>
+                                        </div>
+                                    </a>
+                                    <div class="p-4 border-t border-gray-200 mt-auto">
+                                        <?php if ($mostrarCadeado): ?>
+                                            <a href="planos.php" class="w-full flex items-center justify-center text-xs font-semibold py-2 px-3 rounded-md bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors">
+                                                <i class="fas fa-lock mr-2"></i> Ver Planos
+                                            </a>
+                                        <?php elseif ($podeOuvir): ?>
+                                            <a href="player_podcast.php?slug=<?php echo htmlspecialchars($pod['slug_podcast']); ?>" class="w-full flex items-center justify-center text-xs font-semibold py-2 px-3 rounded-md bg-primary-blue text-white hover:bg-primary-blue-dark transition-colors">
+                                                <i class="fas fa-play mr-2"></i> Ouvir Agora
+                                            </a>
+                                        <?php else: ?>
+                                            <div class="w-full flex items-center justify-center text-xs font-semibold py-2 px-3 rounded-md bg-gray-100 text-gray-400 cursor-default">
+                                                <i class="fas fa-ban mr-2"></i> Indisponível
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-center text-medium-text py-8">Nenhum podcast encontrado.</p>
+                        <?php endif; ?>
+                    </section>
+                <?php elseif (empty($slug_categoria_selecionada) && empty($slug_assunto_selecionado)): ?>
                     <section class="content-item-animated" style="animation-name: fadeInUp;">
                         <h1 class="text-2xl sm:text-3xl font-bold mb-6 p-6 rounded-xl shadow-lg bg-gradient-to-r from-primary-blue to-blue-400 text-white">Explorar Todas as Categorias</h1>
                         <?php if (!empty($categorias_para_exibir)): ?>

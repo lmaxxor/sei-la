@@ -12,6 +12,8 @@ requireAdmin('../login.php'); // Garante que apenas administradores acessem
 
 // Conexão com Banco de Dados (presumido seguro e funcional)
 require_once __DIR__ . '/../db/db_connect.php'; // $pdo deve estar disponível aqui
+require_once __DIR__ . '/../sessao/csrf.php';
+$csrfToken = getCsrfToken();
 
 // Função para sanitizar texto para exibição segura em HTML
 function sanitizarParaHTML(string $texto = null): string {
@@ -104,11 +106,10 @@ function enviarRespostaJSON(bool $ok, string $msg, array $extra = []): void {
 }
 
 // --- PROCESSAMENTO DE AÇÕES AJAX ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    // TODO: Implementar verificação de Token CSRF para todas as ações POST.
-    // Ex: if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
-    //     enviarRespostaJSON(false, 'Erro de segurança. Ação bloqueada.');
-    // }
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"])) {
+    if (!isset($_POST["csrf_token"]) || !verifyCsrfToken($_POST["csrf_token"])) {
+        enviarRespostaJSON(false, "Erro de segurança. Ação bloqueada.");
+    }
 
     $action = $_POST['action'];
     // Caminhos de upload (não usados neste CRUD específico, mas definidos)
@@ -401,6 +402,7 @@ $tipos_oportunidade_select = ['curso' => 'Curso', 'webinar' => 'Webinar', 'artig
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo $csrfToken; ?>">
     <title><?php echo sanitizarParaHTML($pageTitle); ?> - Painel Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -541,6 +543,7 @@ $tipos_oportunidade_select = ['curso' => 'Curso', 'webinar' => 'Webinar', 'artig
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <form id="formOportunidade" novalidate>
+                    <input type="hidden" name="csrf_token" id="op_csrf_token" value="<?php echo $csrfToken; ?>">
                     <input type="hidden" name="id_oportunidade" id="op_id_oportunidade">
                     <input type="hidden" name="action" id="op_action_type" value="add_edit_oportunidade">
                     <div class="modal-header">
@@ -656,6 +659,7 @@ $tipos_oportunidade_select = ['curso' => 'Curso', 'webinar' => 'Webinar', 'artig
         const feedbackGlobalElOp = document.getElementById('feedbackMessageGlobal');
         // Corrigido: O ID no HTML é btnLimparFiltrosOportunidade
         const btnLimparFiltros = document.getElementById('btnLimparFiltrosOportunidade');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
 
         const modalOportunidadeEl = document.getElementById('modalOportunidade');
@@ -674,7 +678,6 @@ $tipos_oportunidade_select = ['curso' => 'Curso', 'webinar' => 'Webinar', 'artig
         const deleteConfirmOpItemName = document.getElementById('deleteConfirmOpItemName');
         const btnConfirmDeleteOp = document.getElementById('btnConfirmDeleteOp');
         let currentDeleteOpId = null;
-        // const csrfToken = document.getElementById('op_csrf_token')?.value; // Exemplo de como pegar o token
 
         function mostrarFeedback(el, mensagem, tipo = 'danger') {
             if (!el) return;
@@ -719,7 +722,7 @@ $tipos_oportunidade_select = ['curso' => 'Curso', 'webinar' => 'Webinar', 'artig
             formData.append('action', 'list_oportunidades');
             formData.append('filtro_tipo', filtroTipoOpSelect.value);
             formData.append('busca_titulo', filtroTituloOpInput.value);
-            // if (csrfToken) formData.append('csrf_token', csrfToken);
+            if (csrfToken) formData.append('csrf_token', csrfToken);
 
             fetch(window.location.pathname, { method: 'POST', body: formData })
             .then(response => {
@@ -807,7 +810,7 @@ $tipos_oportunidade_select = ['curso' => 'Curso', 'webinar' => 'Webinar', 'artig
                 const formData = new FormData();
                 formData.append('action', 'get_oportunidade_details');
                 formData.append('id_oportunidade', idOportunidade);
-                // if (csrfToken) formData.append('csrf_token', csrfToken);
+                if (csrfToken) formData.append('csrf_token', csrfToken);
 
                 fetch(window.location.pathname, { method: 'POST', body: formData })
                 .then(r => r.json())
@@ -857,7 +860,7 @@ $tipos_oportunidade_select = ['curso' => 'Curso', 'webinar' => 'Webinar', 'artig
                 const formData = new FormData();
                 formData.append('action', 'delete_oportunidade');
                 formData.append('id_oportunidade', currentDeleteOpId);
-                // if (csrfToken) formData.append('csrf_token', csrfToken);
+                if (csrfToken) formData.append('csrf_token', csrfToken);
 
                 fetch(window.location.pathname, { method: 'POST', body: formData })
                 .then(response => response.json())
@@ -895,7 +898,7 @@ $tipos_oportunidade_select = ['curso' => 'Curso', 'webinar' => 'Webinar', 'artig
             } else {
                 formData.set('ativo', '1');
             }
-            // if (csrfToken && !formData.has('csrf_token')) formData.append('csrf_token', csrfToken);
+            if (csrfToken && !formData.has('csrf_token')) formData.append('csrf_token', csrfToken);
 
             fetch(window.location.pathname, { method: 'POST', body: formData })
             .then(response => response.json())
