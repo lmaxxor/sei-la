@@ -2,8 +2,9 @@
 // admin/processa_adicionar_podcast.php
 
 require_once __DIR__ . '/../sessao/session_handler.php';
-requireAdmin('../login.php'); 
-require_once __DIR__ . '/../db/db_connect.php'; 
+requireAdmin('../login.php');
+require_once __DIR__ . '/../db/db_connect.php';
+require_once __DIR__ . '/../includes/mailer.php';
 
 // Função para gerar slugs únicos (pode ser movida para um ficheiro de helpers)
 function gerarSlugPodcast($texto, $pdo, $id_podcast_atual = null) {
@@ -253,7 +254,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['adicionar_podcast'])) 
             }
             $_SESSION['form_message'] = $success_message;
             $_SESSION['form_message_type'] = "success";
-            unset($_SESSION['form_data_podcast']); 
+            unset($_SESSION['form_data_podcast']);
+
+            $link = SITE_URL . '/player_podcast.php?slug=' . $slug_podcast;
+            $subject = 'Novo podcast disponível';
+            $msg = 'Confira o novo podcast: <a href="' . $link . '">' . htmlspecialchars($link) . '</a>';
+            notifyUsers($pdo, 'notificar_novos_podcasts', $subject, $msg);
 
             header('Location: adicionar_podcast.php'); // Ou para gerir_podcasts.php
             exit;

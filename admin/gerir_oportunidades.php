@@ -12,6 +12,7 @@ requireAdmin('../login.php'); // Garante que apenas administradores acessem
 
 // Conexão com Banco de Dados (presumido seguro e funcional)
 require_once __DIR__ . '/../db/db_connect.php'; // $pdo deve estar disponível aqui
+require_once __DIR__ . '/../includes/mailer.php';
 require_once __DIR__ . '/../sessao/csrf.php';
 $csrfToken = getCsrfToken();
 
@@ -313,6 +314,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"])) {
                 $message = 'Oportunidade adicionada com sucesso!';
             }
             $pdo->commit(); // Confirmar transação
+            $link = SITE_URL . '/oportunidades.php';
+            $subject = 'Nova oportunidade disponível';
+            $msg = 'Veja detalhes em: <a href="' . $link . '">' . htmlspecialchars($link) . '</a>';
+            notifyUsers($pdo, 'notificar_novas_oportunidades', $subject, $msg);
             enviarRespostaJSON(true, $message, ['id' => $id_oportunidade]);
 
         } catch (PDOException $e) {
