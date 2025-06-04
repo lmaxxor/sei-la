@@ -2,10 +2,10 @@
 // db/config.php
 
 // Configurações do Banco de Dados
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'u582136142_AudioTO');
-define('DB_USER', 'u582136142_AudioTO');
-define('DB_PASS', 'Aceleron0@'); // Mantenha esta informação segura!
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'u582136142_AudioTO');
+define('DB_USER', getenv('DB_USER') ?: 'u582136142_AudioTO');
+define('DB_PASS', getenv('DB_PASS') ?: 'change_me'); // Mantenha esta informação segura!
 define('DB_CHARSET', 'utf8mb4');
 
 // Configurações da Aplicação (Exemplos)
