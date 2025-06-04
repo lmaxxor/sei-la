@@ -17,6 +17,17 @@ cd payments
 composer install
 ```
 
+4. Execute as migrações SQL em `db/migrations` para criar tabelas adicionais, incluindo as da comunidade:
+
+```bash
+mysql -u USER -p DATABASE < db/migrations/002_create_comunidade.sql
+```
+
+## Comunidade
+
+A funcionalidade de comunidade permite publicar topicos e comentar nas discussoes. Utilize os scripts `comunidade_publicar.php`, `comunidade_comentar.php` e `publicacao.php` apos aplicar as migracoes.
+
+
 ## Segurança
 
 Algumas páginas administrativas agora utilizam tokens CSRF para proteger requisições POST. Certifique-se de manter a sessão do usuário ativa para que o token seja válido.

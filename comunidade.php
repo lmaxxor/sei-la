@@ -2,6 +2,7 @@
 require_once __DIR__ . '/sessao/session_handler.php';
 requireLogin('login.php'); // Garante que o utilizador está logado
 require_once __DIR__ . '/db/db_connect.php'; // Conexão com o banco de dados
+require_once __DIR__ . '/sessao/csrf.php';
 
 // Variáveis específicas da página
 $pageTitle = "Comunidade - AudioTO";
@@ -27,47 +28,15 @@ $userAvatarForPost = get_user_avatar_placeholder($userName, $userAvatarUrlSessio
 // Breadcrumbs
 $breadcrumbs = [['nome' => 'Comunidade', 'link' => '#']];
 
-// Placeholder para publicações da comunidade (futuramente viria do banco de dados)
-// Para tornar dinâmico, você precisaria de uma tabela como 'comunidade_publicacoes'
-// e buscar dados de utilizadores da tabela 'utilizadores'.
-$community_posts = [
-    [
-        'post_id' => 1,
-        'user_id' => 6, // ID de um utilizador existente para exemplo
-        'user_name' => 'Mariana Costa', // Nome do utilizador
-        'user_avatar' => get_user_avatar_placeholder('Mariana Costa', null, 48), // Avatar do utilizador
-        'timestamp' => '2 horas atrás',
-        'title' => 'Dicas para Terapia Ocupacional em Casa com Crianças Autistas',
-        'content_preview' => 'Olá comunidade! Gostaria de partilhar algumas estratégias que têm funcionado muito bem nas minhas sessões remotas com crianças no espectro autista, focando em atividades que os pais podem facilmente replicar em casa. Alguém tem mais sugestões?',
-        'likes' => 15,
-        'comments' => 4,
-        'tags' => ['Terapia Ocupacional', 'Autismo', 'Crianças', 'Dicas Práticas']
-    ],
-    [
-        'post_id' => 2,
-        'user_id' => 7,
-        'user_name' => 'Rafael Gomes',
-        'user_avatar' => get_user_avatar_placeholder('Rafael Gomes', null, 48),
-        'timestamp' => '5 horas atrás',
-        'title' => 'Webinar Imperdível sobre Novas Tecnologias Assistivas',
-        'content_preview' => 'Acabei de participar num webinar incrível sobre as últimas novidades em tecnologia assistiva para reabilitação motora. Alguém mais viu? Gostaria de discutir os pontos altos e como podemos aplicar essas ferramentas no nosso dia a dia.',
-        'likes' => 22,
-        'comments' => 8,
-        'tags' => ['Tecnologia Assistiva', 'Reabilitação', 'Webinar']
-    ],
-    [
-        'post_id' => 3,
-        'user_id' => 8,
-        'user_name' => 'Patrícia Albuquerque',
-        'user_avatar' => get_user_avatar_placeholder('Patrícia Albuquerque', null, 48),
-        'timestamp' => '1 dia atrás',
-        'title' => 'Desafios da Fisioterapia Respiratória em Pacientes Pós-COVID',
-        'content_preview' => 'Tenho enfrentado alguns desafios específicos com pacientes na reabilitação respiratória pós-COVID, especialmente em relação à fadiga persistente. Quais abordagens vocês têm utilizado com sucesso? Vamos trocar experiências!',
-        'likes' => 30,
-        'comments' => 12,
-        'tags' => ['Fisioterapia', 'Pós-COVID', 'Reabilitação Respiratória']
-    ]
-];
+// Buscar publicações reais do banco de dados
+$csrfToken = getCsrfToken();
+try {
+    $stmt = $pdo->query("SELECT p.*, u.nome_completo, u.avatar_url FROM comunidade_posts p JOIN utilizadores u ON p.id_utilizador = u.id_utilizador WHERE p.ativo = 1 ORDER BY p.data_criacao DESC");
+    $community_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log('Erro ao carregar publicacoes: ' . $e->getMessage());
+    $community_posts = [];
+}
 
 ?>
 <!DOCTYPE html>
@@ -75,6 +44,7 @@ $community_posts = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= $csrfToken; ?>">
     <title><?= htmlspecialchars($pageTitle); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -243,6 +213,15 @@ $community_posts = [
                 </div>
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-light-bg p-6 md:p-8 space-y-8">
+                <?php if (!empty($_SESSION['community_success'])): ?>
+                    <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4">
+                        <?= htmlspecialchars($_SESSION['community_success']); unset($_SESSION['community_success']); ?>
+                    </div>
+                <?php elseif (!empty($_SESSION['community_error'])): ?>
+                    <div class="bg-red-100 text-red-800 px-4 py-2 rounded mb-4">
+                        <?= htmlspecialchars($_SESSION['community_error']); unset($_SESSION['community_error']); ?>
+                    </div>
+                <?php endif; ?>
                 
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                     <div>
@@ -265,15 +244,16 @@ $community_posts = [
                         <?php foreach ($community_posts as $index => $post): ?>
                             <article class="bg-card-bg p-5 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 content-item-animated" style="animation-delay: <?= $index * 0.1 ?>s;">
                                 <div class="flex items-start space-x-4">
-                                    <img src="<?= htmlspecialchars($post['user_avatar']); ?>" alt="Avatar de <?= htmlspecialchars($post['user_name']); ?>" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0">
+                                    <?php $avatar = get_user_avatar_placeholder($post['nome_completo'], $post['avatar_url'] ?? null, 48); ?>
+                                    <img src="<?= htmlspecialchars($avatar); ?>" alt="Avatar de <?= htmlspecialchars($post['nome_completo']); ?>" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0">
                                     <div class="flex-grow">
                                         <div class="flex items-center justify-between">
                                             <div>
                                                 <h3 class="text-base sm:text-lg font-semibold text-dark-text hover:text-primary-blue transition-colors">
-                                                    <a href="publicacao_detalhe.php?id=<?= $post['post_id']; ?>"><?= htmlspecialchars($post['title']); ?></a>
+                                                    <a href="publicacao.php?id=<?= $post['id_post']; ?>"><?= htmlspecialchars($post['titulo']); ?></a>
                                                 </h3>
                                                 <p class="text-xs text-light-text">
-                                                    Publicado por <span class="font-medium text-medium-text"><?= htmlspecialchars($post['user_name']); ?></span> - <?= htmlspecialchars($post['timestamp']); ?>
+                                                    Publicado por <span class="font-medium text-medium-text"><?= htmlspecialchars($post['nome_completo']); ?></span> - <?= date('d/m/Y H:i', strtotime($post['data_criacao'])); ?>
                                                 </p>
                                             </div>
                                             <button class="text-gray-400 hover:text-primary-blue p-1 -mr-1 rounded-full">
@@ -281,23 +261,14 @@ $community_posts = [
                                             </button>
                                         </div>
                                         <p class="text-sm text-medium-text mt-2 line-clamp-3">
-                                            <?= htmlspecialchars($post['content_preview']); ?>
+                                            <?= htmlspecialchars(mb_strimwidth($post['texto'], 0, 160, '...')); ?>
                                         </p>
-                                        <?php if (!empty($post['tags'])): ?>
-                                        <div class="mt-3 flex flex-wrap gap-2">
-                                            <?php foreach($post['tags'] as $tag): ?>
-                                                <a href="comunidade.php?tag=<?= urlencode($tag); ?>" class="tag-chip">
-                                                    <?= htmlspecialchars($tag); ?>
-                                                </a>
-                                            <?php endforeach; ?>
-                                        </div>
-                                        <?php endif; ?>
                                         <div class="mt-4 pt-3 border-t border-gray-200 flex items-center space-x-6 text-sm text-light-text">
                                             <button class="hover:text-primary-blue flex items-center group">
-                                                <i class="far fa-thumbs-up mr-1.5 group-hover:text-primary-blue transition-colors"></i> <?= $post['likes']; ?> Curtidas
+                                                <i class="far fa-thumbs-up mr-1.5 group-hover:text-primary-blue transition-colors"></i> 0 Curtidas
                                             </button>
-                                            <a href="publicacao_detalhe.php?id=<?= $post['post_id']; ?>#comments" class="hover:text-primary-blue flex items-center group">
-                                                <i class="far fa-comment mr-1.5 group-hover:text-primary-blue transition-colors"></i> <?= $post['comments']; ?> Comentários
+                                            <a href="publicacao.php?id=<?= $post['id_post']; ?>#comments" class="hover:text-primary-blue flex items-center group">
+                                                <i class="far fa-comment mr-1.5 group-hover:text-primary-blue transition-colors"></i> <?= $post['total_comentarios']; ?> Comentários
                                             </a>
                                             <button class="hover:text-primary-blue flex items-center group ml-auto">
                                                 <i class="fas fa-share-alt mr-1.5 group-hover:text-primary-blue transition-colors"></i> Partilhar
@@ -337,14 +308,15 @@ $community_posts = [
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            <form id="newPostForm">
+            <form id="newPostForm" method="post" action="comunidade_publicar.php">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken; ?>">
                 <div class="mb-4">
                     <label for="postTitle" class="block text-sm font-medium text-medium-text mb-1">Título</label>
-                    <input type="text" id="postTitle" name="postTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-primary-blue transition-shadow" placeholder="Um título conciso e informativo">
+                    <input type="text" id="postTitle" name="title" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-primary-blue transition-shadow" placeholder="Um título conciso e informativo">
                 </div>
                 <div class="mb-4">
                     <label for="postContent" class="block text-sm font-medium text-medium-text mb-1">Conteúdo</label>
-                    <textarea id="postContent" name="postContent" rows="6" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-primary-blue transition-shadow" placeholder="Escreva aqui a sua mensagem para a comunidade..."></textarea>
+                    <textarea id="postContent" name="content" rows="6" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-primary-blue transition-shadow" placeholder="Escreva aqui a sua mensagem para a comunidade..."></textarea>
                 </div>
                  <div class="mb-6">
                     <label for="postTags" class="block text-sm font-medium text-medium-text mb-1">Tags (separadas por vírgula)</label>
@@ -431,18 +403,8 @@ $community_posts = [
 
 
             if (newPostForm) {
-                newPostForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    // Aqui você enviaria os dados do formulário para o backend (ex: via fetch/AJAX)
-                    // para criar a nova publicação no banco de dados.
-                    const title = document.getElementById('postTitle').value;
-                    const content = document.getElementById('postContent').value;
-                    const tags = document.getElementById('postTags').value;
-                    console.log('Nova Publicação:', { title, content, tags });
-                    alert('Publicação enviada (simulação)! Veja o console para os dados.');
+                newPostForm.addEventListener('submit', function() {
                     newPostModal.classList.add('hidden');
-                    this.reset(); // Limpa o formulário
-                    // Após sucesso no backend, você poderia recarregar as publicações ou adicionar a nova dinamicamente.
                 });
             }
             
