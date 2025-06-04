@@ -42,12 +42,16 @@ $erro_noticias = null;
 
 try {
     $stmt = $pdo->prepare(
-        "SELECT id_noticia, titulo, data_publicacao, autor_noticia, categoria_noticia, url_imagem_destaque, excerto, conteudo_completo_html, slug_noticia 
-         FROM noticias 
-         WHERE ativo = TRUE AND visibilidade = 'publico'
-         ORDER BY data_publicacao DESC 
+        "SELECT n.*,
+            (SELECT COUNT(*) FROM noticia_votos v WHERE v.id_noticia=n.id_noticia AND v.valor='up') AS upvotes,
+            (SELECT COUNT(*) FROM noticia_votos v WHERE v.id_noticia=n.id_noticia AND v.valor='down') AS downvotes,
+            (SELECT valor FROM noticia_votos v WHERE v.id_noticia=n.id_noticia AND v.id_utilizador=:uid LIMIT 1) AS user_vote
+         FROM noticias n
+         WHERE n.ativo = TRUE AND n.visibilidade = 'publico'
+         ORDER BY n.data_publicacao DESC
          LIMIT 12"
     );
+    $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
     $stmt->execute();
     $weekly_news_from_db = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -281,10 +285,22 @@ echo "<pre>Notícias do DB: "; var_dump($weekly_news_from_db); echo "</pre>";
                                     <p class="text-sm text-medium-text line-clamp-3 mb-4 flex-grow">
                                         <?= htmlspecialchars($news_item['excerto'] ?? 'Leia mais para ver o conteúdo completo.'); ?>
                                     </p>
-                                    <button class="open-news-modal-button mt-auto w-full sm:w-auto text-sm bg-primary-blue-light text-primary-blue-dark font-semibold py-2 px-4 rounded-md hover:bg-primary-blue hover:text-white transition-all duration-200 self-start">
-                                        Ler Mais <i class="fas fa-arrow-right ml-1 text-xs"></i>
-                                    </button>
-                                     <div class="hidden news-full-content"><?= $news_item['conteudo_completo_html']; // Atenção: Confie na fonte do HTML ou sanitize antes de exibir ?></div>
+                                    <div class="flex items-center justify-between mt-auto">
+                                        <div class="flex items-center gap-3 text-sm">
+                                            <button class="vote-button" data-id="<?= $news_item['id_noticia']; ?>" data-action="up">
+                                                <i class="fas fa-arrow-up <?php if(($news_item['user_vote'] ?? '') === 'up') echo 'text-primary-blue'; ?>"></i>
+                                                <span class="up-count ml-0.5"><?= (int)($news_item['upvotes'] ?? 0); ?></span>
+                                            </button>
+                                            <button class="vote-button" data-id="<?= $news_item['id_noticia']; ?>" data-action="down">
+                                                <i class="fas fa-arrow-down <?php if(($news_item['user_vote'] ?? '') === 'down') echo 'text-primary-blue'; ?>"></i>
+                                                <span class="down-count ml-0.5"><?= (int)($news_item['downvotes'] ?? 0); ?></span>
+                                            </button>
+                                        </div>
+                                        <button class="open-news-modal-button text-sm bg-primary-blue-light text-primary-blue-dark font-semibold py-2 px-4 rounded-md hover:bg-primary-blue hover:text-white transition-all duration-200 self-start">
+                                            Ler Mais <i class="fas fa-arrow-right ml-1 text-xs"></i>
+                                        </button>
+                                    </div>
+                                    <div class="hidden news-full-content"><?= $news_item['conteudo_completo_html']; // Atenção: Confie na fonte do HTML ou sanitize antes de exibir ?></div>
                                 </div>
                             </article>
                         <?php endforeach; ?>
@@ -444,12 +460,37 @@ echo "<pre>Notícias do DB: "; var_dump($weekly_news_from_db); echo "</pre>";
             }, { threshold: 0.1 });
 
             if (animatedElements.length > 0) {
-                animatedElements.forEach(el => { 
-                    if(el) observer.observe(el); 
+                animatedElements.forEach(el => {
+                    if(el) observer.observe(el);
                 });
             } else {
                 console.log('Nenhum elemento .news-card-animated encontrado para observar.');
             }
+
+            document.querySelectorAll('.vote-button').forEach(btn => {
+                btn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    const id = this.dataset.id;
+                    const action = this.dataset.action;
+                    const params = new URLSearchParams({ id_noticia:id, acao:action });
+                    fetch('noticia_votar.php', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params})
+                    .then(r=>r.json()).then(data=>{
+                        if(data.success){
+                            const card = this.closest('article');
+                            if(card){
+                                const upSpan = card.querySelector('.up-count');
+                                const downSpan = card.querySelector('.down-count');
+                                const upIcon = card.querySelector('.vote-button[data-action="up"] i');
+                                const downIcon = card.querySelector('.vote-button[data-action="down"] i');
+                                if(upSpan) upSpan.textContent = data.up;
+                                if(downSpan) downSpan.textContent = data.down;
+                                if(upIcon) upIcon.classList.toggle('text-primary-blue', data.vote==='up');
+                                if(downIcon) downIcon.classList.toggle('text-primary-blue', data.vote==='down');
+                            }
+                        }
+                    });
+                });
+            });
         });
     </script>
 </body>
