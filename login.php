@@ -165,7 +165,7 @@ unset($_SESSION['login_errors'], $_SESSION['login_email_attempt'], $_SESSION['re
                         <div style="animation: fadeInUp 0.5s 0.2s both;">
                             <div class="flex justify-between items-center mb-1.5">
                                 <label for="password" class="form-label">Senha</label>
-                                <a href="#" class="text-xs text-primary hover:text-primary-dark font-medium transition-colors">Esqueceu-se da senha?</a>
+                                <a href="esqueci_senha.php" class="text-xs text-primary hover:text-primary-dark font-medium transition-colors">Esqueceu-se da senha?</a>
                             </div>
                             <div class="form-input-container">
                                 <svg class="form-input-icon w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
