@@ -1,0 +1,28 @@
+version: '3.9'
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: audioto
+      DB_USER: audioto
+      DB_PASS: password
+      SMTP_HOST: smtp
+      SMTP_USER: user@example.com
+      SMTP_PASS: secret
+    depends_on:
+      - db
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: audioto
+      MYSQL_USER: audioto
+      MYSQL_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/mysql
+volumes:
+  db-data:

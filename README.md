@@ -54,3 +54,16 @@ Ao adicionar novos podcasts, oportunidades ou notícias, a plataforma envia e-ma
 
 Algumas páginas administrativas agora utilizam tokens CSRF para proteger requisições POST. Certifique-se de manter a sessão do usuário ativa para que o token seja válido.
 
+## Deploy com Docker
+
+O projeto inclui um `Dockerfile` e um `docker-compose.yml` para automatizar a instalação.
+Com o Docker e o docker‑compose instalados basta executar:
+
+```bash
+./deploy.sh
+```
+
+O script irá construir as imagens e iniciar os serviços em segundo plano.
+O site ficará disponível em `http://localhost:8080`.
+Altere as variáveis de ambiente em `docker-compose.yml` conforme sua necessidade.
+
