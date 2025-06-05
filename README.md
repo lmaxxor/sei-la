@@ -49,6 +49,20 @@ Caso o utilizador esqueça a palavra‑passe, utilize `esqueci_senha.php` para e
 
 Ao adicionar novos podcasts, oportunidades ou notícias, a plataforma envia e-mails para os utilizadores que ativaram as respetivas preferências em `preferencias_notificacao`. Endereços listados em `audioto_emails` não recebem mensagens.
 
+## Área Administrativa
+
+O diretório `admin/` contém páginas para gerenciamento do conteúdo do site. A
+sidebar exibe atalhos para:
+
+- categorias e assuntos de podcasts
+- adicionar e gerir podcasts publicados
+- gerir notícias e oportunidades
+- gerir utilizadores cadastrados
+
+Essas páginas utilizam o cabeçalho e a sidebar já existentes e acionam as
+notificações por e-mail quando novos itens são criados.
+
+
 
 ## Segurança
 
