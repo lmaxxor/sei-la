@@ -19,4 +19,13 @@ define('UPLOADS_URL', SITE_URL . '/uploads/'); // URL base para aceder aos uploa
 // Outras configurações que possa precisar
 // define('ADMIN_EMAIL', 'admin@example.com');
 
+// Configurações SMTP para envio de emails
+define('SMTP_HOST', getenv('SMTP_HOST'));
+define('SMTP_USER', getenv('SMTP_USER'));
+define('SMTP_PASS', getenv('SMTP_PASS'));
+define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
+define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'tls');
+define('SMTP_FROM', getenv('SMTP_FROM') ?: SMTP_USER);
+define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'AudioTO');
+
 ?>

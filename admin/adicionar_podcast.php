@@ -4,6 +4,7 @@
 require_once __DIR__ . '/../sessao/session_handler.php';
 requireAdmin('../login.php');
 require_once __DIR__ . '/../db/db_connect.php';
+require_once __DIR__ . '/../includes/mailer.php';
 
 // Utility function for upload errors
 function uploadErrorMessage($error_code) {
@@ -100,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
 
     try {
         $pdo->beginTransaction();
+        $inserted_slugs = [];
 
         for ($i = 0; $i < $total_audio_files; $i++) {
             $audio_original_name = $_FILES['audio_files']['name'][$i];
@@ -204,10 +206,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
             ];
             $stmt->execute($params);
             $processed_count++;
+            $inserted_slugs[] = $slug_podcast;
         }
 
         if (empty($error_details)) {
             $pdo->commit();
+            foreach ($inserted_slugs as $slug) {
+                $link = SITE_URL . '/player_podcast.php?slug=' . $slug;
+                $subject = 'Novo podcast disponível';
+                $msg = 'Confira o novo podcast: <a href="' . $link . '">' . htmlspecialchars($link) . '</a>';
+                notifyUsers($pdo, 'notificar_novos_podcasts', $subject, $msg);
+            }
             $response['success'] = true;
             $response['message'] = $processed_count . " podcast(s) adicionado(s) com sucesso!";
         } else {

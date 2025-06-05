@@ -24,6 +24,16 @@ mysql -u USER -p DATABASE < db/migrations/003_create_comunidade_likes.sql
 mysql -u USER -p DATABASE < db/migrations/004_create_noticia_votos.sql
 mysql -u USER -p DATABASE < db/migrations/005_add_password_reset_fields.sql
 ```
+5. Configure as variáveis de ambiente SMTP utilizadas para envio de e-mails de notificação:
+
+```
+SMTP_HOST=smtp.exemplo.com
+SMTP_USER=usuario
+SMTP_PASS=senha
+SMTP_PORT=587
+SMTP_FROM=nao-responder@exemplo.com
+SMTP_FROM_NAME="AudioTO"
+```
 
 ## Comunidade
 
@@ -35,8 +45,25 @@ O módulo de notícias suporta votos positivos e negativos através do endpoint 
 
 Caso o utilizador esqueça a palavra‑passe, utilize `esqueci_senha.php` para enviar um link de redefinição. Após receber o e‑mail, o utilizador acessa `resetar_senha.php` com o token recebido para definir uma nova senha.
 
+## Notificações por E-mail
+
+Ao adicionar novos podcasts, oportunidades ou notícias, a plataforma envia e-mails para os utilizadores que ativaram as respetivas preferências em `preferencias_notificacao`. Endereços listados em `audioto_emails` não recebem mensagens.
+
 
 ## Segurança
 
 Algumas páginas administrativas agora utilizam tokens CSRF para proteger requisições POST. Certifique-se de manter a sessão do usuário ativa para que o token seja válido.
+
+## Deploy com Docker
+
+O projeto inclui um `Dockerfile` e um `docker-compose.yml` para automatizar a instalação.
+Com o Docker e o docker‑compose instalados basta executar:
+
+```bash
+./deploy.sh
+```
+
+O script irá construir as imagens e iniciar os serviços em segundo plano.
+O site ficará disponível em `http://localhost:8080`.
+Altere as variáveis de ambiente em `docker-compose.yml` conforme sua necessidade.
 
