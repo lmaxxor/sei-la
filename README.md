@@ -63,6 +63,7 @@ Essas páginas utilizam o cabeçalho e a sidebar já existentes e acionam as
 notificações por e-mail quando novos itens são criados.
 
 
+
 ## Segurança
 
 Algumas páginas administrativas agora utilizam tokens CSRF para proteger requisições POST. Certifique-se de manter a sessão do usuário ativa para que o token seja válido.
