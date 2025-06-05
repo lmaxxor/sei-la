@@ -11,51 +11,51 @@ $current_page_admin = basename($_SERVER['PHP_SELF']);
 $nav_items = [
     [
         'href' => 'index.php',
-        'icon' => 'fas fa-tachometer-alt', // Dashboard icon
-        'text' => 'Painel Admin',
+        'icon' => 'fas fa-chart-line',
+        'text' => 'Painel',
         'page_id' => 'index.php'
     ],
     [
         'href' => 'gerir_categorias.php',
-        'icon' => 'fas fa-tags', // Categories icon
+        'icon' => 'fas fa-tags',
         'text' => 'Categorias',
         'page_id' => 'gerir_categorias.php'
     ],
     [
         'href' => 'gerir_assuntos.php',
-        'icon' => 'fas fa-bookmark', // Subjects icon
+        'icon' => 'fas fa-bookmark',
         'text' => 'Assuntos',
         'page_id' => 'gerir_assuntos.php'
     ],
     [
         'href' => 'adicionar_podcast.php',
-        'icon' => 'fas fa-plus-circle', // Add Podcast icon
+        'icon' => 'fas fa-plus-circle',
         'text' => 'Adicionar Podcast',
         'page_id' => 'adicionar_podcast.php'
     ],
     [
         'href' => 'gerir_podcasts.php',
-        'icon' => 'fas fa-list-alt', // Manage Podcasts icon
+        'icon' => 'fas fa-podcast',
         'text' => 'Gerir Podcasts',
         'page_id' => 'gerir_podcasts.php'
     ],
     [
+        'href' => 'gerir_noticias.php',
+        'icon' => 'fas fa-newspaper',
+        'text' => 'Notícias',
+        'page_id' => 'gerir_noticias.php'
+    ],
+    [
         'href' => 'gerir_oportunidades.php',
-        'icon' => 'fas fa-bullhorn', // Opportunities icon
+        'icon' => 'fas fa-bullhorn',
         'text' => 'Oportunidades',
         'page_id' => 'gerir_oportunidades.php'
     ],
     [
         'href' => 'gerir_utilizadores.php',
-        'icon' => 'fas fa-users-cog', // Users icon
+        'icon' => 'fas fa-users-cog',
         'text' => 'Utilizadores',
         'page_id' => 'gerir_utilizadores.php'
-    ],
-       [
-        'href' => 'gerir_noticias.php',
-        'icon' => 'fas fa-notice-cog', // Users icon
-        'text' => 'Noticias',
-        'page_id' => 'gerir_noticias.php'
     ]
 ];
 
