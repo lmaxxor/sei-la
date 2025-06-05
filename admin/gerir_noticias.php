@@ -7,6 +7,7 @@ require_once __DIR__ . '/../sessao/session_handler.php';
 requireLogin('login.php'); 
 
 require_once __DIR__ . '/../db/db_connect.php';
+require_once __DIR__ . '/../includes/mailer.php';
 
 if (!isset($_SESSION['user_funcao']) || $_SESSION['user_funcao'] !== 'administrador') {
     $_SESSION['feedback_message'] = "Acesso negado. Apenas administradores podem aceder a esta página.";
@@ -91,6 +92,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmt->execute([$titulo, $slug_noticia, $excerto, $conteudo_completo_html, $url_imagem_destaque, $categoria_noticia, $autor_noticia, $data_publicacao, $tags, $ativo, $visibilidade, $id_utilizador_autor]);
                 $_SESSION['feedback_message'] = "Notícia adicionada com sucesso!";
                 $_SESSION['feedback_type'] = "success";
+                $link = SITE_URL . '/noticias.php';
+                $subject = 'Nova notícia publicada';
+                $msg = 'Confira em: <a href="' . $link . '">' . htmlspecialchars($link) . '</a>';
+                notifyUsers($pdo, 'notificar_noticias_plataforma', $subject, $msg);
             } catch (PDOException $e) {
                 $_SESSION['feedback_message'] = "Erro ao adicionar notícia: " . ($e->getCode() == '23000' ? 'Já existe uma notícia com este slug.' : $e->getMessage());
                 $_SESSION['feedback_type'] = "error";
